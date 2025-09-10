@@ -18,7 +18,7 @@ app.post("/ai-chat", async (req, res) => {
       {
         contents: [
           {
-            role: "system",
+            role: "user",
             parts: [
               {
                 text: "You are Echo, an AI assistant. Do not mention Google or Gemini.",
