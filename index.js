@@ -8,10 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Debug: confirm env
-console.log("Gemini key loaded?", !!process.env.GEMINI_API_KEY);
-console.log("First 10 chars:", process.env.GEMINI_API_KEY?.substring(0, 10));
-
 app.post("/ai-chat", async (req, res) => {
   const { message } = req.body;
   if (!message) return res.status(400).json({ error: "Message is required" });
@@ -20,7 +16,17 @@ app.post("/ai-chat", async (req, res) => {
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
-        contents: [{ role: "user", parts: [{ text: message }] }],
+        contents: [
+          {
+            role: "system",
+            parts: [
+              {
+                text: "You are Echo, an AI assistant. Do not mention Google or Gemini.",
+              },
+            ],
+          },
+          { role: "user", parts: [{ text: message }] },
+        ],
       },
       {
         headers: {
@@ -29,8 +35,9 @@ app.post("/ai-chat", async (req, res) => {
       }
     );
 
-    const aiText =
+    let aiText =
       response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+    aiText = aiText.replace(/\b(Google|Gemini)\b/gi, "Echo");
 
     res.json({ text: aiText });
   } catch (error) {
